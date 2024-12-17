@@ -6,6 +6,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard</title>
+    <style>
+        /* Centering the month text */
+        #posted-items-month,
+        #claimed-items-month {
+            text-align: center;
+            margin: 0;
+            /* Remove default margins for better alignment */
+        }
+    </style>
 </head>
 
 <body>
@@ -40,11 +49,18 @@
         <div class="summary-cards">
             <!-- Posted Items Summary -->
             <div class="card">
-                <h3>Posted Items Summary</h3>
                 <button class="btn-blue" onclick="printTable('posted-items')">Print</button>
                 <button class="btn-green" onclick="exportTableToCSV('posted-items')">Export to CSV</button>
                 <table id="posted-items">
                     <thead>
+                        <tr>
+                            <th colspan="4">
+                            <p style="text-align: center; margin: 0;">Isabela State University - Cauayan Campus</p>
+                                <h3>Posted Items Summary</h3>
+
+                                <p id="posted-items-month"></p>
+                            </th>
+                        </tr>
                         <tr>
                             <th>Item ID</th>
                             <th>Item Name</th>
@@ -67,11 +83,17 @@
 
             <!-- Claimed Items Summary -->
             <div class="card">
-                <h3>Claimer Details and Claimed Item</h3>
                 <button class="btn-blue" onclick="printTable('claimed-items')">Print</button>
                 <button class="btn-green" onclick="exportTableToCSV('claimed-items')">Export to CSV</button>
                 <table id="claimed-items">
                     <thead>
+                        <tr>
+                            <th colspan="6">
+                            <p style="text-align: center; margin: 0;">Isabela State University - Cauayan Campus</p>
+                                <h3>Claimer Details and Claimed Item</h3>
+                                <p id="claimed-items-month"></p>
+                            </th>
+                        </tr>
                         <tr>
                             <th>Claim ID</th>
                             <th>Item Name</th>
@@ -95,6 +117,17 @@
             </div>
 
             <script>
+                // Function to set the current month below the titles
+                function setCurrentMonth() {
+                    const now = new Date();
+                    const options = { year: 'numeric', month: 'long' };
+                    const currentMonth = now.toLocaleDateString(undefined, options);
+
+                    // Set current month in the respective tables
+                    document.getElementById('posted-items-month').textContent = Month: ${currentMonth};
+                    document.getElementById('claimed-items-month').textContent = Month: ${currentMonth};
+                }
+
                 // Function to print the table
                 function printTable(tableId) {
                     var table = document.getElementById(tableId);
@@ -130,6 +163,9 @@
                     link.click();
                     document.body.removeChild(link);
                 }
+
+                // Initialize the current month
+                setCurrentMonth();
             </script>
 </body>
 
