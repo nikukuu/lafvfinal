@@ -11,10 +11,10 @@ admin_bp = Blueprint('admin', __name__, template_folder='../templates')
 def get_db_connection():
     try:
         connection = mysql.connector.connect(
-            host='localhost',
-            user='root',
-            password='',
-            database='laf2'
+            host='sql12.freesqldatabase.com',
+            user='sql12752537',
+            password='HmcHn7eXlU',
+            database='sql12752537'
         )
         return connection
     except mysql.connector.Error as e:
