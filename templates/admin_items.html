@@ -17,6 +17,7 @@
         <a href="{{ url_for('admin.contact_us')}}">Claimer Info</a>
         <hr>
         <a href="{{ url_for('admin.admin_account') }}">Account Info</a>
+        <a href="{{ url_for('admin.admin_logs') }}">Activity Logs</a>
         <a href="{{ url_for('admin.admin_login') }}">Logout</a>
     </div>
 
@@ -32,6 +33,16 @@
         {% endwith %}
     
         <h1>Items List</h1>
+
+        <form method="GET" action="{{ url_for('admin.admin_items') }}">
+            <label for="status">Filter by Status:</label>
+            <select name="status" id="status" onchange="this.form.submit()">
+                <option value="">All</option>
+                <option value="published" {{ 'selected' if selected_status == 'published' else '' }}>Published</option>
+                <option value="claimed" {{ 'selected' if selected_status == 'claimed' else '' }}>Claimed</option>
+            </select>
+        </form>
+
         <table>
             <tr>
                 <th>ID</th>

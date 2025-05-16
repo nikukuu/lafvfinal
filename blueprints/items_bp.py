@@ -5,11 +5,10 @@ items_bp = Blueprint('items', __name__, template_folder='../templates')
 
 def get_db_connection():
     connection = mysql.connector.connect(
-            host='kwimn.h.filess.io',
-            user='lostthenfound_gashorndog',
-            password='1c2943e986bcf6276ea1c71099e14054ae2b9283',
-            database='lostthenfound_gashorndog',
-            port = "3307"
+            host='localhost',
+            user='root',
+            password='',
+            database='lafsample'
         )
     return connection
 

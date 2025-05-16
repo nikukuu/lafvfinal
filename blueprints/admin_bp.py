@@ -11,16 +11,27 @@ admin_bp = Blueprint('admin', __name__, template_folder='../templates')
 def get_db_connection():
     try:
         connection = mysql.connector.connect(
-            host='kwimn.h.filess.io',
-            user='lostthenfound_gashorndog',
-            password='1c2943e986bcf6276ea1c71099e14054ae2b9283',
-            database='lostthenfound_gashorndog',
-            port = "3307"
+            host='localhost',
+            user='root',
+            password='',
+            database='lafsample'
         )
         return connection
     except mysql.connector.Error as e:
         print(f"Error connecting to database: {e}")
         return None
+    
+def log_activity(admin_username, action):
+    connection = get_db_connection()
+    cursor = connection.cursor()
+
+    query = "INSERT INTO activity_logs (admin_username, action) VALUES (%s, %s)"
+    cursor.execute(query, (admin_username, action))
+
+    connection.commit()
+    cursor.close()
+    connection.close()
+
 
 #----------------------------ADMIN---LOGIN------------------------------------------------------------------------
 
@@ -41,8 +52,11 @@ def admin_login():
         connection.close()
 
         if admin and admin[0] == username and check_password_hash(admin[1], password):
-            session['admin_logged_in'] = True  # Set a session variable
-            return redirect(url_for('admin.admin_dashboard'))  # Redirect to the admin dashboard
+            session['admin_logged_in'] = True
+            session['admin_username'] = username
+            log_activity(username, "Logged in")  # <- Add this line
+            return redirect(url_for('admin.admin_dashboard'))
+
         else:
             flash('Invalid username or password', 'danger')
 
@@ -220,6 +234,8 @@ def admin_post():
         cursor.close()
         connection.close()
 
+        log_activity(session['admin_username'], f"Posted new item: {item_name}")
+
         success_message = "Post Item successfully published."
 
     return render_template('admin_post.html', success_message=success_message)
@@ -227,23 +243,33 @@ def admin_post():
 @admin_bp.route('/admin_items')
 def admin_items():
     if not session.get('admin_logged_in'):
-        return redirect(url_for('admin_login'))
+        return redirect(url_for('admin.admin_login'))
+
+    status_filter = request.args.get('status')  # Get status from query string
 
     connection = get_db_connection()
     cursor = connection.cursor()
 
-    # Fetch all items, ordering by date_created in descending order (latest first)
-    cursor.execute("""
-        SELECT id, date_found, item_name, description, status 
-        FROM items 
-        ORDER BY date_found DESC, id ASC
-    """)
-    items = cursor.fetchall()
+    if status_filter in ['published', 'claimed']:
+        cursor.execute("""
+            SELECT id, date_found, item_name, description, status 
+            FROM items 
+            WHERE status = %s 
+            ORDER BY date_found DESC, id ASC
+        """, (status_filter,))
+    else:
+        cursor.execute("""
+            SELECT id, date_found, item_name, description, status 
+            FROM items 
+            ORDER BY date_found DESC, id ASC
+        """)
 
+    items = cursor.fetchall()
     cursor.close()
     connection.close()
 
-    return render_template('admin_items.html', items=items)
+    return render_template('admin_items.html', items=items, selected_status=status_filter)
+
 
 @admin_bp.route('/admin/claims')
 def admin_claims():
@@ -303,6 +329,8 @@ def confirm_claim(claim_id):
                 (default_description, item_id)
             )
 
+            log_activity(session['admin_username'], f"Confirmed claim ID {claim_id} and marked item ID {item_id} as claimed.")
+
             # Commit the changes to the database
             connection.commit()
             flash('Claim confirmed successfully!', 'success')
@@ -335,6 +363,8 @@ def delete_claim(claim_id):
     cursor.close()
     connection.close()
 
+    log_activity(session['admin_username'], f"Deleted claim ID {claim_id}")
+
     flash(f"Claim ID {claim_id} has been successfully deleted.", 'success')
     return redirect(url_for('admin.admin_claims'))
 
@@ -362,6 +392,9 @@ def edit_item(item_id):
 
         cursor.close() 
         connection.close()
+
+        log_activity(session['admin_username'], f"Edited item ID {item_id}")
+        
         flash('Item updated successfully!', 'success')
         return redirect(url_for('admin.admin_items'))
 
@@ -399,4 +432,23 @@ def delete_item(item_id):
         cursor.close()
         connection.close()
 
+        log_activity(session['admin_username'], f"Deleted item ID {item_id}")
+
     return redirect(url_for('admin.admin_items'))
+
+
+#------------------------Activity Logs---------------------------------
+
+@admin_bp.route('/admin_logs')
+def admin_logs():
+    if not session.get('admin_logged_in'):
+        return redirect(url_for('admin.admin_login'))
+
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    cursor.execute("SELECT admin_username, action, timestamp FROM activity_logs ORDER BY timestamp DESC")
+    logs = cursor.fetchall()
+    cursor.close()
+    connection.close()
+
+    return render_template('admin_logs.html', logs=logs)
