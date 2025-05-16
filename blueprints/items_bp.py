@@ -5,11 +5,12 @@ items_bp = Blueprint('items', __name__, template_folder='../templates')
 
 def get_db_connection():
     connection = mysql.connector.connect(
-        host='sql12.freesqldatabase.com',
-        user='sql12752537',
-        password='HmcHn7eXlU',
-        database='sql12752537'
-    )
+            host='kwimn.h.filess.io',
+            user='lostthenfound_gashorndog',
+            password='1c2943e986bcf6276ea1c71099e14054ae2b9283',
+            database='lostthenfound_gashorndog'
+            port = "3307"
+        )
     return connection
 
 @items_bp.route('/items', methods=['GET'])
