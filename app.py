@@ -1,6 +1,11 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request, session, redirect, url_for, send_file
+from captcha.image import ImageCaptcha
+import random
+import string
+import io
 from blueprints.items_bp import items_bp
 from blueprints.admin_bp import admin_bp
+
 
 app = Flask(__name__)
 
@@ -11,6 +16,7 @@ app.secret_key = 'lafISUCC'
 app.register_blueprint(items_bp)
 app.register_blueprint(admin_bp)
 
+    
 @app.route('/')
 def home():
     return render_template("home.html")
