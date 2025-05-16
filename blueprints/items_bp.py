@@ -4,14 +4,17 @@ import mysql.connector
 items_bp = Blueprint('items', __name__, template_folder='../templates')
 
 def get_db_connection():
-    connection = mysql.connector.connect(
-            host='kwimn.h.filess.io',
-            user='lostthenfound_gashorndog',
-            password='1c2943e986bcf6276ea1c71099e14054ae2b9283',
-            database='lostthenfound_gashorndog',
-            port = "3307"
+    try:
+        connection = mysql.connector.connect(
+            host='localhost',
+            user='root',
+            password='',
+            database='laf'
         )
-    return connection
+        return connection
+    except mysql.connector.Error as e:
+        print(f"Error connecting to database: {e}")
+        return None
 
 @items_bp.route('/items', methods=['GET'])
 def items():
