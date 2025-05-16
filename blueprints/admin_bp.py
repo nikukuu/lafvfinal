@@ -1,25 +1,38 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, session, request, current_app
+from flask import Blueprint, render_template, redirect, url_for, flash, session, request, current_app, send_file
 import mysql.connector
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 import os
 from datetime import datetime
+import random
+import string
+from captcha.image import ImageCaptcha
+import sys
+import os
+
+
+
 
 admin_bp = Blueprint('admin', __name__, template_folder='../templates')
 
+   
 # Database connection function
 def get_db_connection():
     try:
         connection = mysql.connector.connect(
-            host='sql12.freesqldatabase.com',
-            user='sql12752537',
-            password='HmcHn7eXlU',
-            database='sql12752537'
+            host='localhost',
+            user='root',
+            password='',
+            database='laf'
         )
         return connection
     except mysql.connector.Error as e:
         print(f"Error connecting to database: {e}")
         return None
+
+# Helper: Generate CAPTCHA text
+def generate_captcha_text(length=5):
+    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))
 
 #----------------------------ADMIN---LOGIN------------------------------------------------------------------------
 
@@ -28,24 +41,36 @@ def admin_login():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
+        captcha_input = request.form['captcha']
 
-        # Connect to the database
+        if captcha_input.upper() != session.get('captcha_text', ''):
+            flash('Invalid CAPTCHA', 'danger')
+            return redirect(url_for('admin.admin_login'))
+
         connection = get_db_connection()
         cursor = connection.cursor()
-
-        # Query the admin credentials
         cursor.execute("SELECT username, password FROM admin_info WHERE id = 1")
-        admin = cursor.fetchone()  # Fetch the first row (since only one admin exists)
+        admin = cursor.fetchone()
         cursor.close()
         connection.close()
 
         if admin and admin[0] == username and check_password_hash(admin[1], password):
-            session['admin_logged_in'] = True  # Set a session variable
-            return redirect(url_for('admin.admin_dashboard'))  # Redirect to the admin dashboard
+            session['admin_logged_in'] = True
+            return redirect(url_for('admin.admin_dashboard'))
         else:
             flash('Invalid username or password', 'danger')
 
+    session['captcha_text'] = generate_captcha_text()
     return render_template('admin_login.html')
+
+# CAPTCHA image route
+@admin_bp.route('/admin_login/captcha')
+def captcha_image():
+    image = ImageCaptcha()
+    captcha_text = session.get('captcha_text', '')
+    data = image.generate(captcha_text)
+    return send_file(data, mimetype='image/png')
+
 
 @admin_bp.route('/logout')
 def logout():
